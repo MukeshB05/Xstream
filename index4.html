@@ -158,7 +158,15 @@
       cursor: pointer;
       filter: contrast(125%);
     }
-    
+    .fixed-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #1e293b;
+            z-index: 50;
+            border-bottom: 1px solid #334155;
+    }
     .filterinput,
     .ddlFilterTableRow {
       width: 33%;
@@ -343,6 +351,7 @@
 
 </head>
 <body>
+<header class="fixed-header">
 <div class='no-items section' id='search_top' name='Search (Top)'></div>
 <center><section>
 <select class='ddlFilterTableRow' data-attribute='genre' id='ddlAge'>
@@ -386,6 +395,7 @@
 <input class='filterinput' placeholder='Search' type='text'/>
 <h1 id='headerCount'></h1>
         <div id='livebbtvTable'>
+</header>
 
 <a href="go:SMAXTV" rel="nofollow">
 <div
