@@ -1,0 +1,663 @@
+<html lang="en">
+<head>
+    <meta charset="windows-1252">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <title>Mobile TV</title>
+    <link rel="stylesheet" href="https://cdn.radiantmediatechs.com/rmp/7.11.6/js/rmp-shaka.min.js" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons"      rel="stylesheet">
+<script src="https://cdn.radiantmediatechs.com/rmp/7.11.6/js/rmp-shaka.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <style>
+    body {background-color: #212227;} 
+    .titlem {
+       width: 70%;
+	   hight: auto;
+       padding-top : 15px;
+       background-color: transparent;
+	   text-align: left;
+	   margin-left: 10px;
+	   color: white;
+	   font-family: "sans-serif";
+	   font-size: 16px;
+	   }
+    .about {
+       width: 90%;
+	   hight: auto;
+       padding-top : 0px;
+       background-color: transparent;
+	   text-align: left;
+	   margin-left: 10px;
+	   color: #8E9698;
+	   font-family: "sans-serif";
+	   font-size: 13px;
+	   }
+     .crew {
+       width: 70%;
+	   hight: auto;
+       padding-top : 5px;
+	   pading-bottom : 5px;
+       background-color: transparent;
+	   text-align: left;
+	   margin-left: 10px;
+	   color: #4D5353;
+	   font-family: "sans-serif";
+	   font-size: 12px;
+	   }
+    .container {
+       padding: 15px;
+       max-width: 600px;
+       display: flex;
+    &__image {
+       margin: 0px ;
+       width: 100px;
+       object-fit: contain;
+       align-self: flex-start;
+       }
+    </style>
+    
+</head>
+
+<script>
+
+var $video  = $('video'),
+    $window = $(window); 
+
+$(window).resize(function(){
+    
+    var height = $window.height();
+    $video.css('height', height);
+    
+    var videoWidth = $video.width(),
+        windowWidth = $window.width(),
+    marginLeftAdjust =   (windowWidth - videoWidth) / 2;
+    
+    $video.css({
+        'height': height, 
+        'marginLeft' : marginLeftAdjust
+    });
+}).resize();
+</script>
+
+     <style>[data-player] video {
+    object-fit:fill;
+    width: 100%;
+    height: 100%;
+}</style>
+
+<div class="con">
+
+<style type="text/css">body {
+margin: 0;
+padding: 0;
+}
+</style>
+
+<div id="rmp"></div>
+
+<script>
+const src = {
+  hls: 'http://web.applelive.in/hls/mediavision.m3u8'
+};
+const settings = {
+  licenseKey: 'Kl8lbz16cz1rN2l2enM9Z2M9NnZvMnllaT9yb201ZGFzaXMzMGRiMEElXyo=',
+  src: src,
+  isLiveDvr: true,
+  scaleMode: 'stretch',
+  posterScaleMode: 'stretch',
+  skin: 's3',
+  autoplay: true,
+  preload: 'smart',
+  contentMetadata: {
+    poster: [
+      'https://i.imgur.com/NdDBNWm.jpg'
+    ]
+     },
+  // Logo settings
+  logo: '',
+  logoLoc: '',
+  logoPosition: 'topright',
+  logoWatermark: true
+  };
+
+  const rmp = new RadiantMP('rmp');
+
+          rmp.init(settings);
+</script>
+
+
+</div>
+
+
+</br>
+<div> <center><font color="yellow">Switch Servers And Use Them</font></center> </div>
+
+<div class="slider-grid">
+
+<div class="item line"><a href="go:MEDIAV" rel="nofollow"><div class="gird1">
+<div class="freel"><center><i class="fa fa-play-circle" 
+style="color: red; margin-right: 6px;"></i>Fullscreen</center></div></div></div>
+  </div>
+  
+ <hr> 
+  
+
+
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+
+<script>
+$(document).ready(function(){
+	var maxLength = 120;
+	$(".show-read-more").each(function(){
+		var myStr = $(this).text();
+		if($.trim(myStr).length > maxLength){
+			var newStr = myStr.substring(0, maxLength);
+			var removedStr = myStr.substring(maxLength, $.trim(myStr).length);
+			$(this).empty().html(newStr);
+			$(this).append(' <a href="javascript:void(0);" class="read-more">read more...</a>');
+			$(this).append('<span class="more-text">' + removedStr + '</span>');
+		}
+	});
+	$(".read-more").click(function(){
+		$(this).siblings(".more-text").contents().unwrap();
+		$(this).remove();
+	});
+});
+</script>
+<style>
+    .show-read-more .more-text{
+        display: none;
+    }
+</style>
+
+
+<!--sliding-->
+
+
+<div class="slider-grid">
+
+<a href="market://details?id=shahulteams.tvmobile">
+<div class="item line"><div class="gird1">
+<div class="freel"><center><i class="fa fa-thumbs-up" 
+style="color: green; margin-right: 6px;"></i>Rate
+</center></div></div></div></a>
+
+<a href="whatsapp://send?text=🔴Watching *Media Vision - Parasaala* On Android *KK Xstream* Application Download Link : http://kkxstream.ga">
+<div class="item line"><div class="gird1">
+<div class="freel"><center><i class="fa fa-share-alt" 
+style="color: yellow; margin-right: 6px;"></i>Share
+</center></div></div></div></a>
+
+<a href="help not working this time">
+<div class="item line"><div class="gird1">
+<div class="freel"><center><i class="fa fa-question-circle" 
+style="color: black; margin-right: 6px;"></i> Help
+</center></div></div></div></a>
+  
+
+</div>
+
+<style>    
+.slider-grid{ 
+          box-sizing:border-box;
+          height:auto;
+          overflow-x:auto;
+          overflow-y:hidden;
+          padding-bottom: 8px;
+          text-align:center;
+          white-space:nowrap;
+          width:100%;
+          margin-top:8px;
+          padding-left: 8px;
+		  color: #3F9FFF;
+	      font-family: "sans-serif";
+	      font-size: 12px;
+          }
+.slider-grid .item.line{
+          height:auto;
+          width: 28%;
+          display:inline-block;
+          margin:3px 3px;
+          vertical-align:top;
+          cursor:pointer;
+          }
+    .gird1{
+          background-image: linear-gradient(to top, #3F9FFF, #3F9FFF);
+          position:relative;
+          border-radius: 5px;
+          box-shadow: 2px 2px 3px rgba(0,0,0, .0);
+          padding: 8px;
+		  color: #DADADA;
+	      font-family: "sans-serif";
+	      font-size: 12px;
+          border:0px solid #FaFaFa;
+          }
+.freel .gr{
+          color:#FaFaFa;
+          }
+		b {
+          color: #FaFaFa;
+	      font-family: "sans-serif";
+	      font-size: 12px;
+          }
+    .freel{
+          position:relative;
+          padding:6px 6px 13px;
+          margin-bottom:4px;
+          height:15px;
+          line-height: 12px;
+		  color: #FaFaFa;
+	      font-family: "sans-serif";
+	      font-size: 12px;
+          }
+.freel .g-rate{
+          font-size:15px;
+          color:#000;
+          }
+.freel .g-rate i{
+          font-size:15px;
+          color:#000;
+          }
+
+</style>
+
+
+
+<div class="container">
+<img class="container__image" src="https://i.imgur.com/2s4XBec.png" onerror="this.src=''"
+style="height: 90px; width: 65px;  border-radius: 2px;"></a>
+<div class="containertext">
+      
+<text style="margin-left: 17px; 
+margin-top: 0px; 
+color: white;
+font-family: "sans-serif";
+font-size: 13px;">
+
+Media Vision
+
+</text><br><text style="margin-left: 17px; 
+margin-top: 5px; margin-top: 0px;color: #4D5353;
+font-family: "sans-serif";
+font-size: 11px;">
+
+
+<!--Txt Here-->
+
+</text><br><text style="margin-left: 17px; 
+margin-top: 5px; margin-top: 0px;color: #4D5353;
+font-family: "sans-serif";
+font-size: 11px;">
+
+
+Language : Malayalam 
+</text><br><text style="margin-left: 17px; 
+margin-top: 5px; margin-top: 0px;color: #4D5353;
+font-family: "sans-serif";
+font-size: 11px;">
+
+
+<!--Txt Here-->
+
+
+</text><br><text style="margin-left: 17px; 
+margin-top: 5px; margin-top: 0px;color: #4D5353;
+font-family: "sans-serif";
+font-size: 11px;">
+
+<font color="red">In case you face any streaming issues,</font>
+
+</text><br><text style="margin-left: 17px; 
+margin-top: 5px; margin-top: 0px;color: #4D5353;
+font-family: "sans-serif";
+font-size: 11px;">
+
+
+<a href="whatsapp://send?text=*Channel Name : Media Vision - Parasalaa*%0a
+*Complaint :*%0a
+&phone=+91"><font color="red">you can report it here<font></font> <font color="yellow">    <i class="fa fa-envelope"></i></font></a>
+
+</text></div></div>
+
+
+<div class="about"><p class="show-read-more">Media Vision - Parasaala, Trivandrum District</p>
+</div>
+
+<div class="crew">
+Last Updated : 29/03/2023
+</div>
+
+<center>
+<div id="effects" class="effects">
+  
+
+</div></center>
+
+
+
+<!--Recomended start here-->
+
+<div class="cont" style="margin-bottom: 8px;">
+<a class="language" href="#" style="display:inline-block; font-color: white;"> 
+<i class="fa fa-play-circle" style="color:white; margin-right: 5px;"></i>Kanyakumari Xstream</a>
+</i></a></div>
+
+
+<div class="scrollmenu">
+
+    
+
+
+</div>
+<!--Recomended end here-->
+
+
+<style>
+.items {
+       display: flex;
+       flex-flow: row nowrap;
+       justify-content: space-between;
+       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      -ms-overflow-style: -ms-autohiding-scrollbar;       
+       }
+.item-title 
+       {
+       font-family: 'Comfortaa';
+       font-size: 17px;
+       color: #444854;
+       margin: 2px auto;
+       }
+ .chip {
+       display:inline-block;
+       Width: 30%;
+       font-size:15px;
+       font-family: 'Comfortaa';
+       color: #0cb299;
+       padding: auto;
+       border: 1px solid #F45721;
+       border-radius: 25px;
+       background-color: #D63700;
+       margin: auto;    
+       }
+  body {
+       font-family: 'Comfortaa';
+       font-style: bold;
+	   font-variant: bold;
+       font-size: 13px;
+       }
+     b {
+       color: #DADADA;
+       font-size: 12px;
+       font-family: "comfortaa";
+       font-weight: normal;
+       }
+  body { 
+       background-color: #212227; 
+       } 
+div.gallery 
+       { 
+       border: 1px solid #ccc; 
+       border-radius:2px; 
+       margin-top:7px; 
+       background-color: white; 
+       }
+ .cont {
+       font-family: Comfortaa;
+       font-style: normal;
+       font-size: 15px;
+       background-color: transparent;
+       border-radius: 5px;
+       margin-left:0px;
+       margin-right:0px;
+       margin-bottom:3px;
+       font-color: black;      
+       }
+.language { 
+       background-color: transparent;
+       font-size: 15px;
+       font-weight: normal;
+       font-family: Comfortaa;
+       border-radius: 0px;
+       color: white; 
+       text-shadow: 2px 2px 2px rgba(0,0,0, .2);
+       padding-right: 8px;
+       Padding-left: 8px;
+       Padding-top: 8px;
+       Padding-bottom: 1px;
+       margin-left: 5px;
+       text-align: center; 
+       text-decoration: none; 
+       display: inline-block; 
+       }
+.buttons { 
+       background-color: transparent;
+       font-size: 15px;
+       font-weight: bold;
+       font-family: Comfortaa;
+       border: 1px solid #101211;
+       border-radius: 10px;
+       color: white; 
+       padding-right: 8px; 
+       padding-left: 8px; 
+       Padding-top: 8px;
+       Padding-bottom: 1px;
+       text-align: center; 
+       text-decoration: none; 
+       display: inline-block; 
+       }
+ .desc {
+       white-space: nowrap; 
+       overflow: hidden; 
+       text-overflow: ellipsis; 
+       padding: 0px; 
+       text-align: center; 
+       color:red; 
+       } 
+::-webkit-scrollbar 
+       { 
+       display: none; 
+       } 
+div.scrollmenu { 
+       overflow: auto;
+       margin-left: 0px;
+       border-radius: 0px;
+       white-space: nowrap; 
+       } 
+div.scrollmenu a { 
+       display: inline-block; 
+       text-align: center; 
+       border-radius: 5px;
+       text-decoration: none; 
+       } 
+ .menu {
+       background-color: #101211;
+       margin-right: 0px; 
+       margin-left: 12px;
+       margin-top: 10px;
+       Margin-bottom: 20px;
+       padding-left: 0px;
+       padding-right: 0px;  
+       padding-top: 0px;
+       border: 0px solid #101211;
+       box-shadow: 2px 2px 0px rgba(0,0,0, .0);	   
+       padding-bottom: px; 
+       }
+.scrollmenu a:hover { 
+       background-color: #101211;
+       border-radius: 5px;
+       } 
+.w3-lobster {
+       font-family: "Lobster", serif;
+       }
+ .navs {
+       display: inline;
+       }
+.containers {
+       position: relative;
+       width: 100%;
+       }
+.images img {
+       width: 31%;
+       height: 4.5in;
+       box-shadow: 3px 3px 3px rgba(0,0,0, .1);
+       }
+.titles {
+       width: 20%;
+       position: absolute;
+       bottom: 0; left: 0;
+       }
+ .size {
+       color:white;
+       background-color: #009999;
+       box-shadow:0px 1px;
+       border-radius: 4px;
+       padding-left: 10px; padding-right: 0px;
+       }
+.mySlides {
+       display: none;
+       }
+.w3-left, .w3-right, .w3-badge {
+       cursor:pointer
+       }
+.w3-badge {
+       height:13px;
+       width:13px;
+       padding:0;
+       }
+div.gallery {
+       border: 4px solid green;
+       border-radius:3px;
+       margin-top:3px;
+       padding-top:2px;
+       }
+div.gallery:hover {
+       border-color: red;
+       }
+div.gallery img {
+       width: 50%;
+       height: auto;
+       }
+div.desc {
+       padding: 5px;
+       text-align: center;
+       color: red;
+       }
+     a {  
+       text-decoration:none;
+       }
+     * {
+       box-sizing: border-box;
+       }
+.responsive {
+       padding: 0 3px;
+       float: left;
+       width: 50%;
+       }
+.clearfix:after {
+       display: table;
+       clear: both;
+       }
+.section-title 
+       { 
+       background-color: #009999;
+       box-shadow: 0px 3px 3px rgba(0,0,0, .1);
+       margin-right: 10px;  
+       margin-left: 10px; 
+       padding-top: 20px; 
+       padding-bottom:20px; 
+       text-shadow: 2px 2px 5px black; 
+       font-weight: bold; 
+       text-align: center;
+       }
+     * {
+       box-sizing:border-box
+       }
+.mySlides {
+       display:none
+       }
+      a{
+       -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+       -webkit-tap-highlight-color: transparent;
+       -webkit-user-select: none;
+       -khtml-user-select: none;
+       -moz-user-select: none;
+       -ms-user-select: none;
+        user-select: none;
+       }
+       
+.w3-display-bottomleft{position:absolute;left:0;bottom:0}.w3-display-bottomright{position:absolute;right:0;bottom:0}
+.w3-animate-bottom{position:relative;animation:animatebottom 0.4s}@keyframes animatebottom{from{bottom:-300px;opacity:0} to{bottom:0;opacity:1}}
+.w3-display-bottomleft{position:absolute;left:0;bottom:0}.w3-display-bottomright{position:absolute;right:0;bottom:0}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded",()=> {
+  const e = document.querySelector("video"),
+    n = e.getElementsByTagName("source")[0].src,
+    o = {};
+  if(Hls.isSupported()) {
+    var config = {
+      maxMaxBufferLength: 100,
+    };
+    const t = new Hls(config);
+    t.loadSource(n), t.on(Hls.Events.MANIFEST_PARSED, function(n, l) {
+      const s = t.levels.map(e => e.height);
+      o.quality = {
+        default: s[0],
+        options: s,
+        forced: !0,
+        onChange: e => (function(e) {
+          window.hls.levels.forEach((n, o) => {
+            n.height === e && (window.hls.currentLevel = o)
+          })
+        })(e)
+      };
+      new Plyr(e, o)
+    }), t.attachMedia(e), window.hls = t
+  } else {
+    new Plyr(e, o)
+  }
+});
+</script>
+
+<script>
+        window.addEventListener("load", () => {
+            document.body.classList.remove("preload");
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const nav = document.querySelector(".nav");
+
+            document.querySelector("#btnNav").addEventListener("click", () => {
+                nav.classList.add("nav--open");
+            });
+
+            document.querySelector(".nav__overlay").addEventListener("click", () => {
+                nav.classList.remove("nav--open");
+            });
+        });
+</script>
+
+<script type="text/javascript">
+let listVideo = document.querySelectorAll('.video-list .vid');
+let mainVideo = document.querySelector('.main-video video');
+let title = document.querySelector('.main-video .title');
+
+listVideo.forEach(video =>{
+  video.onclick = () =>{
+    listVideo.forEach(vid => vid.classList.remove('active'));
+    video.classList.add('active');
+    if(video.classList.contains('active')){
+      let src = video.children[0].getAttribute('src');
+      mainVideo.src = src;
+      let text = video.children[1].innerHTML;
+      title.innerHTML = text;
+    };
+  };
+});
+</script>
+<script src="https://cdn.plyr.io/3.6.12/plyr.js"></script>
+<script>//<![CDATA[
+const players = Array.from(document.querySelectorAll('.js-player')).map(player => new Plyr(player));
+//]]></script>
