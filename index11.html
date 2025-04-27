@@ -1,0 +1,951 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" href="https://play-lh.googleusercontent.com/xvYf7WalhnqrCa47xA2-npCyZZJwzeFQwtfhjNCn2XHqRC12W0k3Ua2Dhpd-Td_fDg" />
+    <title>Radio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.10/hls.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --selected: #aaaaaa;
+            --playing: #44dd88;
+            --buffering: #dddd44;
+            --error: #dd6666;
+            --hover: #8866cc;
+            --paused: #ff8833;
+
+            --bg-dark: #121212;
+            --bg-medium: #1E1E1E;
+            --text-primary: #FFFFFF;
+            --text-secondary: #B0B0B0;
+            --accent-live: #FF4136;
+            --accent-upcoming: #4CAF50;
+            --transition-speed: 0.3s;
+            --telegram-primary: #0088cc;
+            --telegram-hover: #0370a7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+            user-select: none;
+            background: #0f172a;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            padding-bottom: 100px;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+            position: relative;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-button {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 1.5rem;
+            padding: 8px;
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .back-button:hover {
+            transform: translateX(-5px);
+        }
+
+        .back-arrow {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .header h1 {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .telegram-btn {
+            background-color: var(--telegram-primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+            min-width: 140px;
+            flex-shrink: 0;
+        }
+
+        .telegram-btn:hover {
+            background-color: var(--telegram-hover);
+
+        }
+
+        .telegram-icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #radioList {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 1200px;
+            justify-content: center;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .radio-icon-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1/1;
+            cursor: pointer;
+            transition: transform 0.3s ease-in-out, box-shadow 0.2s ease-in-out;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .radio-icon-container:hover:not(.selected) {
+            transform: scale(1.05);
+        }
+
+        .selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 5px 3px var(--selected);
+            z-index: 2;
+        }
+
+        .playing {
+            box-shadow: 0 0 5px 3px var(--playing);
+        }
+
+        .buffering {
+            box-shadow: 0 0 5px 3px var(--buffering);
+        }
+
+        .paused {
+            box-shadow: 0 0 5px 3px var(--paused);
+        }
+
+        .error {
+            box-shadow: 0 0 5px 3px var(--error);
+        }
+
+        .radio-icon {
+            width: 100%;
+            height: 100%;
+            border-radius: 5px;
+            object-fit: cover;
+            user-drag: none;
+            -webkit-user-drag: none;
+        }
+
+        .icon-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 32px;
+            border-radius: 5px;
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.2s ease;
+        }
+
+        .selected .icon-overlay {
+            opacity: 1; /* Only visible on selected items */
+        }
+
+        #stickyPlayer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.4);
+            padding: 10px 10px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-top: 1px solid #334155;
+        }
+
+        #playerControls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        .control-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            margin: 0 15px;
+            transition: transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .control-button:hover {
+            transform: scale(1.1);
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .control-button:active {
+            transform: scale(0.95);
+        }
+
+        #playPauseBtn {
+            font-size: 28px;
+            width: 50px;
+            height: 50px;
+        }
+
+        #playerInfo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        #selectedRadioName {
+            font-size: 14pt;
+            font-weight: 400;
+            margin: 0;
+            text-align: center;
+        }
+
+        #selectedRadioLocation {
+            font-size: 11pt;
+            font-weight: 400;
+            margin: 5px 0;
+            text-align: center;
+            color: #bbbbbb;
+        }
+
+        #status {
+            font-size: 10pt;
+            color: var(--selected);
+            margin-top: 5px;
+            text-align: center;
+            min-height: 15px;
+        }
+
+        /* Progress bar for buffering animation */
+        #bufferingIndicator {
+            width: 90%;
+            max-width: 400px;
+            height: 3px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 5px 0;
+            display: none;  /* Hidden by default */
+        }
+
+        #bufferingBar {
+            height: 100%;
+            width: 30%;
+            background-color: var(--buffering);
+            border-radius: 3px;
+            animation: buffering 1.5s infinite ease-in-out;
+        }
+        /* Station Title */
+        .station-title {
+
+position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* Slightly lighter background */
+  color: #f8f8f8; /* Lighter text for better contrast */
+  padding: 8px 10px; /* Adjust padding for better spacing */
+  font-size: 0.9em; /* Slightly smaller, modern font size */
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out; /* Smoother, slightly faster transition */
+  border-radius: 8px 8px 0 0; /* Modern rounded top corners */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+        }
+
+        .radio-icon-container:hover .station-title {
+            opacity: 1;
+        }
+        @keyframes buffering {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(400%); }
+        }
+
+        audio {
+            display: none;
+        }
+
+        /* Media Queries */
+        @media screen and (min-width: 768px) {
+            #radioList {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            #stickyPlayer {
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 15px 20px;
+            }
+            
+            #playerInfo {
+                flex: 1;
+                align-items: flex-start;
+                margin-right: 20px;
+            }
+            
+            #playerControls {
+                width: auto;
+                margin-top: 0;
+            }
+            
+            #bufferingIndicator {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+
+        @media screen and (min-width: 992px) {
+            #radioList {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+
+        @media screen and (min-width: 1200px) {
+            #radioList {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .header-controls {
+                flex-direction: column;
+            }
+
+
+            .icon-overlay {
+                font-size: 24px;
+            }
+            
+            #selectedRadioName {
+                font-size: 12pt;
+            }
+            
+            #selectedRadioLocation {
+                font-size: 10pt;
+            }
+            
+            #status {
+                font-size: 9pt;
+            }
+            
+            .control-button {
+                margin: 0 10px;
+                width: 36px;
+                height: 36px;
+                font-size: 20px;
+            }
+            
+            #playPauseBtn {
+                width: 44px;
+                height: 44px;
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+        <div class="header">
+            <div class="header-left">
+                <a href="../index.html" class="back-button">
+                    <svg class="back-arrow" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                    </svg>
+                </a>
+                <h1>Radio</h1>
+            </div>
+            <a href="https://t.me/kkxstream" class="telegram-btn">
+                    <svg class="telegram-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
+                    </svg>
+                    Join Telegram
+                </a>
+            </div>
+    <div id="header"></div>
+    <div id="radioList"></div>
+    <!-- Sticky Player -->
+    <div id="stickyPlayer">
+        <div id="playerInfo">
+            <div id="selectedRadioName">&nbsp;</div>
+            <div id="selectedRadioLocation">&nbsp;</div>
+            <div id="status"><i class="fas fa-info-circle"></i>Ready to play</div>
+            <div id="bufferingIndicator">
+                <div id="bufferingBar"></div>
+            </div>
+        </div>
+        <div id="playerControls">
+            <button class="control-button" id="prevBtn" title="Previous Station">
+                <i class="fas fa-step-backward"></i>
+            </button>
+            <button class="control-button" id="playPauseBtn" title="Play/Pause">
+                <i class="fas fa-play"></i>
+            </button>
+            <button class="control-button" id="nextBtn" title="Next Station">
+                <i class="fas fa-step-forward"></i>
+            </button>
+        </div>
+    </div>
+    
+    <audio id="radioPlayer"></audio>
+    
+    <script>
+// Cache DOM elements
+const radioPlayer = document.getElementById('radioPlayer');
+const radioListDiv = document.getElementById('radioList');
+const statusDiv = document.getElementById('status');
+const selectedRadioNameDiv = document.getElementById('selectedRadioName');
+const selectedRadioLocationDiv = document.getElementById('selectedRadioLocation');
+const bufferingIndicator = document.getElementById('bufferingIndicator');
+const playPauseBtn = document.getElementById('playPauseBtn');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+// Initialize radio data
+const radioList = [{"name":"Chennai FM Rainbow 101.4 FM","image":"https:\/\/tamilradios.net\/webpimg\/radio_72401_air-rainbow-Che.webp","infoLocation":"Chennai","streamUrl":"https:\/\/air.pc.cdn.bitgravity.com\/air\/live\/pbaudio022\/chunklist.m3u8"},{"name":"Radio Mirchi Tamil 98.3 FM","image":"https:\/\/static.mytuner.mobi\/media\/tvos_radios\/674\/radio-mirchi-tamil-fm.4dee4ff8.jpg","infoLocation":"Chennai","streamUrl":"https:\/\/radios.crabdance.com:8002\/1"},{"name":"Suryan 93.5 FM","image":"https:\/\/i1.sndcdn.com\/avatars-000153120616-wqmsuy-t500x500.jpg","infoLocation":"Chennai","streamUrl":"https:\/\/radios.crabdance.com:8002\/2"},{"name":"Vividh Bharati 100.5 FM","image":"https:\/\/tamilradios.net\/webpimg\/radio_92562_Vividh-Bharathi-Chennai.webp","infoLocation":"Chennai","streamUrl":"https:\/\/air.pc.cdn.bitgravity.com\/air\/live\/pbaudio024\/chunklist.m3u8"},{"name":"Radio City 91.1 FM","image":"https:\/\/indiantelevision.com\/sites\/default\/files\/styles\/smartcrop_800x800\/public\/images\/tv-images\/2016\/11\/16\/radio-city-itv.jpg","infoLocation":"Chennai","streamUrl":"https:\/\/radios.crabdance.com:8002\/5"},{"name":"Radio Hello 106.4 FM","image":"https:\/\/onlineradiofm.in\/assets\/image\/radio\/180\/logo-hellofm.png","infoLocation":"Chennai","streamUrl":"https:\/\/radios.crabdance.com:8002\/3"},{"name":"BIG 92.7 FM","image":"https:\/\/encrypted-tbn0.gstatic.com\/images?q=tbn:ANd9GcRXfKe4XQVzX-rHgz7Uc6YZrr-FgdG1usjB_g&s","infoLocation":"Chennai","streamUrl":"https:\/\/stream.zeno.fm\/dbstwo3dvhhtv"},{"name":"Radio ChennaiLive 104.8 FM","image":"https:\/\/i1.sndcdn.com\/avatars-000007747683-5axr1d-t1080x1080.jpg","infoLocation":"Chennai","streamUrl":"http:\/\/live.tamilkuyilradio.com:8026\/rajaradio"},{"name":"Air FM Gold Chennai","image":"https:\/\/tamilradios.net\/webpimg\/radio_16819_FM%20Gold%20Chennai%20100.1%20tamil.webp","infoLocation":"Chennai","streamUrl":"https:\/\/air.pc.cdn.bitgravity.com\/air\/live\/pbaudio021\/chunklist.m3u8"},{"name":"All India Radio AIR CHENNAI PC 720 AM","image":"https:\/\/onlineradiofm.in\/assets\/image\/radio\/180\/air-chennai-pc.jpg","infoLocation":"Chennai","streamUrl":"https:\/\/air.pc.cdn.bitgravity.com\/air\/live\/pbaudio025\/chunklist.m3u8"},{"name":"Radio Raaja FM","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/raaja-fm.jpg","infoLocation":"Chennai","streamUrl":"http:\/\/live.tamilkuyilradio.com:8026\/rajaradio"},{"name":"Radio Naam Tamilar FM","image":"https:\/\/onlineradiofm.in\/assets\/image\/radio\/180\/naamragam.png","infoLocation":"Chennai","streamUrl":"https:\/\/stream.zeno.fm\/1riby02juxxtv"},{"name":"Radio Hello 106.4 FM","image":"https:\/\/onlineradiofm.in\/assets\/image\/radio\/180\/logo-hellofm.png","infoLocation":"Coimbatore","streamUrl":"https:\/\/air.pc.cdn.bitgravity.com\/air\/live\/pbaudio022\/chunklist.m3u8"},{"name":"All India Radio AIR Coimbatore 999 AM","image":"https:\/\/tamilradios.net\/webpimg\/radio_32986_Coimbatore.webp","infoLocation":"Coimbatore","streamUrl":"https:\/\/air.pc.cdn.bitgravity.com\/air\/live\/pbaudio016\/chunklist.m3u8"},{"name":"All India Radio Air Akashvani 103.3 FM","image":"https:\/\/tamilradios.net\/webpimg\/radio_79072_air0mdu.webp","infoLocation":"Madurai","streamUrl":"https:\/\/airhlspush.pc.cdn.bitgravity.com\/httppush\/hlspbaudio002\/hlspbaudio00264kbps.m3u8"},{"name":"SS Radio Madurai","image":"https:\/\/liveonlineradio.net\/wp-content\/uploads\/2022\/10\/SS-Radio-Madurai-220x108.webp","infoLocation":"Madurai","streamUrl":"https:\/\/stream-172.zeno.fm\/3dact43wqg0uv"},{"name":"Air Rainbow 102.1 FM","image":"https:\/\/tamilradios.net\/webpimg\/radio_16655_air-rainbow-Tirunelveli.webp","infoLocation":"Tiruchirappalli","streamUrl":"https:\/\/airhlspush.pc.cdn.bitgravity.com\/httppush\/hlspbaudio004\/hlspbaudio00464kbps.m3u8"},{"name":"All India Radio AIR Tiruchirappalli FM 102.1 FM","image":"https:\/\/tamilradios.net\/webpimg\/radio_47834_Tiruchirapalli.webp","infoLocation":"Tiruchirappalli","streamUrl":"https:\/\/air.pc.cdn.bitgravity.com\/air\/live\/pbaudio040\/chunklist.m3u8"},{"name":"Sona FM 107.8","image":"https:\/\/www.valliappafoundation.org\/images\/sona-fm.png","infoLocation":"Salem","streamUrl":"https:\/\/d25mebek0b74k4.cloudfront.net\/valliapparadio.m3u8"},{"name":"All India Radio Air Akashvani 102.6 FM","image":"https:\/\/tamilradios.net\/webpimg\/radio_10133_Tirunelveli.webp","infoLocation":"Tirunelveli","streamUrl":"https:\/\/airhlspush.pc.cdn.bitgravity.com\/httppush\/hlspbaudio002\/hlspbaudio00264kbps.m3u8"},{"name":"All India Radio AIR Kodaikanal","image":"https:\/\/tamilradios.net\/webpimg\/radio_99358_12.webp","infoLocation":"Kodaikanal","streamUrl":"https:\/\/air.pc.cdn.bitgravity.com\/air\/live\/pbaudio051\/chunklist.m3u8"},{"name":"All India Radio AIR Tuticorin 1053 AM","image":"https:\/\/tamilradios.net\/webpimg\/radio_32702_Tuticorin.webp","infoLocation":"Thoothukudi","streamUrl":"https:\/\/air.pc.cdn.bitgravity.com\/air\/live\/pbaudio121\/chunklist.m3u8"},{"name":"All India Radio AIR Nagercoil Kumari FM 101 FM","image":"https:\/\/tamilradios.net\/webpimg\/radio_79116_Nagarkovil.webp","infoLocation":"Nagercoil","streamUrl":"https:\/\/air.pc.cdn.bitgravity.com\/air\/live\/pbaudio207\/chunklist.m3u8"},{"name":"Air Rainbow 101.2 FM","image":"https:\/\/onlineradiofm.in\/assets\/image\/radio\/180\/all-india-air.webp","infoLocation":"Thanjavur","streamUrl":"https:\/\/airhlspush.pc.cdn.bitgravity.com\/httppush\/hlspbaudio004\/hlspbaudio00464kbps.m3u8"},{"name":"Mjoy Mjms FM","image":"https:\/\/onlineradiofm.in\/assets\/image\/radio\/180\/mjfm.png","infoLocation":"Vellore","streamUrl":"http:\/\/stream-163.zeno.fm\/e7yqb8fe84zuv"},{"name":"All India Radio Air Akashvani 102.5 FM","image":"https:\/\/tamilradios.net\/webpimg\/radio_44407_air-rainbow-Dharmapuri.webp","infoLocation":"Dharmapuri","streamUrl":"https:\/\/airhlspush.pc.cdn.bitgravity.com\/httppush\/hlspbaudio002\/hlspbaudio00264kbps.m3u8"},{"name":"American Tamil Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/american-tamil-radio.jpg","infoLocation":"United States","streamUrl":"https:\/\/cp11.serverse.com\/proxy\/hgsmgluv\/stream"},{"name":"US TAMIL FM ","image":"https:\/\/tamilradios.net\/webpimg\/radio_78620_Us-tamil-fm.webp","infoLocation":"United States","streamUrl":"https:\/\/streaming.radio.co\/s0cfc93915\/listenm"},{"name":"Lankasri FM","image":"https:\/\/onlineradiofm.in\/assets\/image\/radio\/180\/lankashri.png","infoLocation":"United Kingdom","streamUrl":"http:\/\/5984.cloudrad.io:8032\/;stream.mp3"},{"name":"Muthamil Fm","image":"https:\/\/tamilradios.net\/webpimg\/radio_24565_muthamil-fm.webp","infoLocation":"cananda","streamUrl":"https:\/\/ec2.yesstreaming.net:2540\/stream"},{"name":"Thaalam FM","image":"https:\/\/thaalam.fm\/img\/logo.png","infoLocation":"cananda","streamUrl":"https:\/\/ec4.yesstreaming.net:1990\/stream"},{"name":"CMR Tamil HD Radio","image":"https:\/\/tamilradios.net\/webpimg\/radio_84626_cmr-tamil-hd-radio.webp","infoLocation":"cananda","streamUrl":"https:\/\/live.cmr24.net\/CMR\/TamilHD-MQ\/icecast.audio"},{"name":"CTBC Radio","image":"https:\/\/tamilradios.net\/webpimg\/radio_4113_ctbc-radio.webp","infoLocation":"cananda","streamUrl":"http:\/\/ctbcfmradio.primcast.com:4086\/;"},{"name":"Thenral World Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/thenral-world-radio.jpg","infoLocation":"Germany","streamUrl":"https:\/\/thenralw.radioca.st\/LiveStream"},{"name":"Inbathamil Oli","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/inbathamil-oli-radio.jpg","infoLocation":"Australia","streamUrl":"https:\/\/usa7.fastcast4u.com\/proxy\/ozmediae?mp=\/1"},{"name":"Tamil Panpalai Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/tamil-panpalai-online-radio.jpg","infoLocation":"France","streamUrl":"https:\/\/tamilpanpalai.radioca.st\/ind"},{"name":"Radio Vaanam","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/radio-vaanam.jpg","infoLocation":"Switzerland","streamUrl":"https:\/\/sathees.radioca.st\/;stream.mp3"},{"name":"Tamil 89.4 FM","image":"https:\/\/tamilradios.net\/webpimg\/radio_65567_tamil-89-4-fm.webp","infoLocation":"United Arab Emirates","streamUrl":"https:\/\/centova.aarenworld.com\/proxy\/894tamilfm\/stream"},{"name":"Radio Gilli 106.5 FM","image":"https:\/\/www.radiogilli.com\/uploads\/logo.webp","infoLocation":"United Arab Emirates","streamUrl":"https:\/\/stream.rcast.net\/66462"},{"name":"Olisg FM ","image":"https:\/\/tamilradios.net\/webpimg\/radio_28957_olisg-fm.webp","infoLocation":"Singapore","streamUrl":"https:\/\/22893.live.streamtheworld.com\/OLI968FMAAC.aac"},{"name":"Minnal FM","image":"https:\/\/onlineradiofm.in\/assets\/image\/radio\/180\/minnalfm.png","infoLocation":"Malaysia","streamUrl":"https:\/\/playerservices.streamtheworld.com\/api\/livestream-redirect\/MINNAL_FMAAC.aac"},{"name":"shakthi FM","image":"https:\/\/play-lh.googleusercontent.com\/O6ApjX3vM6G-UUzPzTnu82GBpzTlHIrsjpp70P6Hqg9IEmCtNVuIvhWZGF1HgX0EuRY","infoLocation":"Sri Lanka","streamUrl":"https:\/\/mbc.thestreamtech.com:8086\/index.html"},{"name":"Sooriyan FM","image":"https:\/\/upload.wikimedia.org\/wikipedia\/en\/thumb\/5\/51\/Sooriyan_FM_logo.png\/250px-Sooriyan_FM_logo.png","infoLocation":"Sri Lanka","streamUrl":"https:\/\/radio.lotustechnologieslk.net:2020\/stream\/sooriyanfmgarden"},{"name":"Capital FM","image":"https:\/\/tamilmuthu.com\/image\/capitalfm.webp","infoLocation":"Sri Lanka","streamUrl":"https:\/\/listen.radioking.com\/radio\/729299\/stream\/795374"},{"name":"Star FM","image":"https:\/\/radiosindia.com\/images\/starfm.jpg","infoLocation":"Sri Lanka","streamUrl":"https:\/\/stream.starfm.lk:12025\/stream"},{"name":"SLBC Thendral Fm","image":"https:\/\/dvw7f7sqjk3ag.cloudfront.net\/images\/radio\/60723.jpg","infoLocation":"Sri Lanka","streamUrl":"http:\/\/220.247.227.20:8000\/Threndralstream"},{"name":"SLBC Tamil National Service","image":"https:\/\/kuasark.com\/files\/stations-logos\/tamil-national-service.png","infoLocation":"Sri Lanka","streamUrl":"http:\/\/220.247.227.6:8000\/Tnsstream"},{"name":"Ilayaraja FM","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/ilayaraja-fm.jpg","infoLocation":"india","streamUrl":"https:\/\/stream-164.zeno.fm\/pwm9y3eud5zuv"},{"name":"AR Rahman FM","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/arr-radio.jpg","infoLocation":"india","streamUrl":"http:\/\/stream.zeno.fm\/ihpr0rqzoxquv"},{"name":"Harris Jayaraj Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/harris-jayaraj-radio.jpg","infoLocation":"india","streamUrl":"https:\/\/stream-158.zeno.fm\/0bhsthssutzuv"},{"name":"K.J.Yesudas Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/kj-yesudas-radio.jpg","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/trtwuyqdmrgtv"},{"name":"SPB Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/spb-online-radio.jpg","infoLocation":"india","streamUrl":"https:\/\/stream-159.zeno.fm\/9adkzdcqi4jvv"},{"name":"Deva Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/deva-radio.jpg","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/ijpae65onobuv"},{"name":"KS Chitra Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/ks-chitra-radio.jpg","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/aad4e51qz7zuv"},{"name":"S Janaki Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/s-janaki-radio.jpg","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/nnhhfe4bv1uuv"},{"name":"Imman Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/imman-radio.jpg","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/6apkrxlnxudtv"},{"name":"Mano Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/mano-radio.jpg","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/maokuvdskhnuv"},{"name":"Swarnalatha Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/swarnalatha-radio.jpg","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/gr6nspzaa48uv"},{"name":"Santhosh Narayanan Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/santhosh-narayanan-radio.jpg","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/wkqvzsg1238uv"},{"name":"GV Prakash Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/gv-prakash-radio.jpg","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/c9cxafngfekvv"},{"name":"TMS Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/tms-radio.jpg","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/qvonezatdxytv"},{"name":"MGR Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/mgr-radio.jpg","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/0muspvd4138uv"},{"name":"Sivaji Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/sivaji-radio.jpg","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/kq88hd71w0hvv"},{"name":"Mgr Sivaji Radio","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/mgr-sivaji-radio.jpg","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/pq4yq4qri9yvv"},{"name":"https:\/\/stream.zeno.fm\/pq4yq4qri9yvv","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/ilayaraja-voice-fm.jpg","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/qfd4vokvu3dvv"},{"name":"SPB Old Hits","image":"https:\/\/www.tamilradios.com\/assets\/img\/radio-logos\/spb-old-hits-fm.jpg","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/lgukkevrihmvv"},{"name":"Parithabangal Radio","image":"https:\/\/tamilradios.net\/webpimg\/radio_8558_parithabangal.webp","infoLocation":"india","streamUrl":"https:\/\/cast6.my-control-panel.com\/proxy\/parithabangaltwo\/live"},{"name":"Vadivelu Comedy Radio","image":"https:\/\/tamilradios.net\/webpimg\/radio_47673_vadivelu-comedy.webp","infoLocation":"india","streamUrl":"https:\/\/relay2.southradios.net\/listen\/vadivelu_comedy_radio\/stream"},{"name":"Lollu Sabha radio","image":"https:\/\/tamilradios.net\/webpimg\/radio_49020_lollu-sabha.webp","infoLocation":"india","streamUrl":"https:\/\/cast6.my-control-panel.com\/proxy\/lollusabha\/live"},{"name":"Tamil Comedy Radios","image":"https:\/\/tamilradios.net\/webpimg\/radio_75137_11.webp","infoLocation":"india","streamUrl":"https:\/\/relay2.southradios.net\/listen\/tamil_comedy_radio_autodj\/stream"},{"name":"Goundamani Senthil Radio","image":"https:\/\/tamilradios.net\/webpimg\/radio_26587_goundamain-senthil.webp","infoLocation":"india","streamUrl":"https:\/\/relay2.southradios.net\/listen\/goundamani_senthil_radio_audodj\/stream"},{"name":"Tamil Old Movies Comedy","image":"https:\/\/tamilradios.net\/webpimg\/radio_22113_tamil-comedy-movies-radio.webp","infoLocation":"india","streamUrl":"https:\/\/cast6.my-control-panel.com\/proxy\/oldcomedyradio\/live"},{"name":"Oru Pada Comedy","image":"https:\/\/tamilradios.net\/webpimg\/radio_78328_oru-pada.webp","infoLocation":"india","streamUrl":"https:\/\/cast6.my-control-panel.com\/proxy\/orupadacomedy\/live"},{"name":"Nagesh Radio","image":"https:\/\/tamilradios.net\/webpimg\/radio_87869_nagesh.webp","infoLocation":"india","streamUrl":"https:\/\/cast6.my-control-panel.com\/proxy\/nageshradio\/live"},{"name":"Tamil Comedy FM","image":"https:\/\/tamilradios.net\/webpimg\/radio_16404_tamil-comedy.webp","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/tmgktm50dzzuv"},{"name":"Non Stop Comedy","image":"https:\/\/tamilradios.net\/webpimg\/radio_40616_non-stop-comedy.webp","infoLocation":"india","streamUrl":"https:\/\/stream.zeno.fm\/vbvuqx3pbq8uv    "},{"name":"Tamil Comedy Dramas","image":"https:\/\/tamilradios.net\/webpimg\/radio_48862_comedy-dramas.webp","infoLocation":"india","streamUrl":"https:\/\/spserver.sscast2u.in\/tamildramas\/stream"},{"name":"Tamil Movie Radio","image":"https:\/\/tamilradios.net\/webpimg\/radio_36307_5.webp","infoLocation":"india","streamUrl":"https:\/\/cast6.my-control-panel.com\/proxy\/tamilmovi\/live"},{"name":"Patti Mandram Radio","image":"https:\/\/tamilradios.net\/webpimg\/radio_83811_pattmandran-radio.webp","infoLocation":"india","streamUrl":"https:\/\/cast6.my-control-panel.com\/proxy\/pattimandram\/live"}];
+
+// Constants
+const MAX_RETRIES = 1;
+const STATUS_ICONS = {
+    ready: '<i class="fas fa-info-circle"></i>',
+    connecting: '<i class="fas fa-sync fa-spin"></i>',
+    buffering: '<i class="fas fa-sync fa-spin"></i>',
+    playing: '<i class="fas fa-music"></i>',
+    paused: '<i class="fas fa-pause"></i>',
+    error: '<i class="fas fa-exclamation-triangle"></i>',
+    retry: '<i class="fas fa-redo-alt fa-spin"></i>'
+};
+
+// HLS and state variables
+let hls = null;
+let isHLSStream = false;
+let retryCount = 0;
+let retryTimeoutId = null;
+let currentStreamUrl = '';
+let isHlsSupported = Hls.isSupported();
+let isRetrying = false;
+
+// Get initial radio selection from localStorage or use default
+const lastSelectedRadioIndex = localStorage.getItem('lastSelectedRadioIndex');
+const initialSelectedIndex = (lastSelectedRadioIndex !== null && 
+                            parseInt(lastSelectedRadioIndex, 10) < radioList.length) ? 
+                            parseInt(lastSelectedRadioIndex, 10) : 0;
+let currentIndex = initialSelectedIndex;
+
+// Core functions
+function updateRadioInfo(index) {
+    selectedRadioNameDiv.textContent = radioList[index].name;
+    selectedRadioLocationDiv.textContent = radioList[index].infoLocation || '~';
+}
+
+function updateStatus(message, type = 'info') {
+    // Update with appropriate icon
+    const icon = STATUS_ICONS[type] || STATUS_ICONS.info;
+    statusDiv.innerHTML = `${icon} ${message}`;
+    
+    // Toggle buffering indicator
+    if (type === 'connecting' || type === 'buffering' || type === 'retry') {
+        bufferingIndicator.style.display = 'block';
+    } else {
+        bufferingIndicator.style.display = 'none';
+    }
+}
+
+function isM3u8Url(url) {
+    return url.toLowerCase().endsWith('.m3u8');
+}
+
+function destroyHls() {
+    if (hls) {
+        hls.destroy();
+        hls = null;
+    }
+}
+
+function loadStream(url, forceNewRetry = true) {
+    // Reset retry count for new stream if needed
+    if (forceNewRetry) {
+        retryCount = 0;
+        isRetrying = false;
+    }
+    
+    // Clear any pending retries
+    clearTimeout(retryTimeoutId);
+    
+    currentStreamUrl = url;
+    destroyHls();
+
+    // Set buffering state
+    const containers = document.querySelectorAll('.radio-icon-container');
+    const currentContainer = containers[currentIndex];
+    currentContainer.classList.remove('playing', 'paused', 'error');
+    currentContainer.classList.add('buffering');
+    
+    // Update status and button
+    updateStatus('Connecting to stream...', 'connecting');
+    playPauseBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>';
+
+    // Check if the stream is HLS (m3u8)
+    isHLSStream = isM3u8Url(url);
+
+    if (isHLSStream && isHlsSupported) {
+        // Use HLS.js for m3u8 streams with optimized configuration
+        hls = new Hls({
+            enableWorker: true,
+            lowLatencyMode: true,
+            backBufferLength: 30, // Reduced for mobile
+            maxBufferLength: 20,  // Reduced for mobile
+            maxMaxBufferLength: 30, // Reduced for mobile
+            startLevel: -1, // Auto level selection
+            fragLoadingMaxRetry: 2,
+            manifestLoadingTimeOut: 10000, // 10 seconds timeout for manifest loading
+            manifestLoadingMaxRetry: 2
+        });
+        
+        hls.loadSource(url);
+        hls.attachMedia(radioPlayer);
+        
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            playStream();
+        });
+        
+        hls.on(Hls.Events.ERROR, function(event, data) {
+            if (data.fatal) {
+                console.error('HLS error:', data.type, data.details);
+                handlePlaybackError();
+            }
+        });
+    } else {
+        // Use native audio player for other formats
+        radioPlayer.src = url;
+        radioPlayer.load();
+        playStream();
+    }
+}
+
+function playStream() {
+    const playPromise = radioPlayer.play();
+    
+    if (playPromise !== undefined) {
+        playPromise.catch(e => {
+            console.error("Play failed:", e);
+            handlePlaybackError();
+        });
+    }
+}
+
+function handlePlaybackError() {
+    // If we're already in the retry process, don't start a new one
+    if (isRetrying) return;
+    
+    if (retryCount < MAX_RETRIES) {
+        retryCount++;
+        isRetrying = true;
+        updateStatus(`Connection failed. Retrying...`, 'retry');
+        playPauseBtn.innerHTML = '<i class="fas fa-sync fa-spin"></i>';
+        
+        // Try again after a delay
+        retryTimeoutId = setTimeout(() => {
+            isRetrying = false;
+            loadStream(currentStreamUrl, false);  // Don't reset retry count
+        }, 2000);
+    } else {
+        // We've reached the maximum retries
+        updateStatus(`Connection failed`, 'error');
+        
+        // Mark as error
+        const containers = document.querySelectorAll('.radio-icon-container');
+        const currentContainer = containers[currentIndex];
+        currentContainer.classList.remove('buffering', 'playing', 'paused');
+        currentContainer.classList.add('error');
+        
+        // Update overlay and button
+        const overlay = currentContainer.querySelector('.icon-overlay');
+        overlay.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+        overlay.title = 'Error';
+        playPauseBtn.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+        
+        // Reset the audio player
+        radioPlayer.pause();
+        radioPlayer.currentTime = 0;
+        radioPlayer.src = '';
+        
+        // Reset retry flags
+        isRetrying = false;
+    }
+}
+
+function changeChannel(index, forcePlay = false) {
+    // Clear any pending retries
+    clearTimeout(retryTimeoutId);
+    isRetrying = false;
+    
+    // Cyclic index (wrap around)
+    index = (index < 0 ? radioList.length - 1 : index % radioList.length);
+
+    const containers = document.querySelectorAll('.radio-icon-container');
+    const isSelected = containers[index].classList.contains('selected');
+    const isPlaying = !radioPlayer.paused;
+
+    // If clicking on the currently selected and playing station, pause it
+    if (isSelected && isPlaying && !forcePlay) {
+        radioPlayer.pause();
+        updateStatus('Stream paused', 'paused');
+        return;
+    }
+
+    // Update selected station styling
+    containers.forEach((container) => {
+        container.classList.remove('selected', 'playing', 'buffering', 'paused', 'error');
+    });
+    
+    containers[index].classList.add('selected');
+    
+    // Save selection in localStorage
+    currentIndex = index;
+    localStorage.setItem('lastSelectedRadioIndex', currentIndex);
+
+    // Update displayed station info
+    updateRadioInfo(index);
+
+    // Play if needed
+    if (forcePlay || isPlaying) {
+        loadStream(radioList[index].streamUrl, true);
+    } else {
+        destroyHls(); 
+        currentStreamUrl = radioList[index].streamUrl;
+        updatePlayPauseState();
+    }
+    
+    // Mobile scroll optimization - only scroll if not fully visible
+    const container = containers[index];
+    const rect = container.getBoundingClientRect();
+    const isInView = (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
+    
+    if (!isInView) {
+        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function updatePlayPauseState() {
+    const containers = document.querySelectorAll('.radio-icon-container');
+    const currentContainer = containers[currentIndex];
+    
+    // Remove buffering class first
+    currentContainer.classList.remove('buffering');
+    
+    // Reset status classes
+    currentContainer.classList.remove('playing', 'paused', 'error');
+    
+    // Update overlay
+    const overlay = currentContainer.querySelector('.icon-overlay');
+    
+    if (radioPlayer.error || retryCount >= MAX_RETRIES) {
+        currentContainer.classList.add('error');
+        overlay.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+        overlay.title = 'Error - Click to retry';
+        playPauseBtn.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+        updateStatus('Stream error', 'error');
+    } else if (radioPlayer.paused) {
+        currentContainer.classList.add('paused');
+        overlay.innerHTML = '<i class="fas fa-play"></i>';
+        overlay.title = 'Play';
+        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        updateStatus('Ready to play', 'ready');
+    } else {
+        currentContainer.classList.add('playing');
+        overlay.innerHTML = '<i class="fas fa-pause"></i>';
+        overlay.title = 'Pause';
+        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        updateStatus('Playing', 'playing');
+    }
+}
+
+function togglePlayPause(index) {
+    // Clear any pending retries
+    clearTimeout(retryTimeoutId);
+    isRetrying = false;
+    
+    if (currentIndex !== index) {
+        changeChannel(index, true);
+        return;
+    }
+
+    const containers = document.querySelectorAll('.radio-icon-container');
+    const currentContainer = containers[currentIndex];
+    
+    // If we're in error state, attempt to play again
+    if (currentContainer.classList.contains('error')) {
+        retryCount = 0;
+        loadStream(radioList[index].streamUrl, true);
+        return;
+    }
+
+    if (radioPlayer.paused) {
+        loadStream(radioList[index].streamUrl, true);
+    } else {
+        radioPlayer.pause();
+        updateStatus('Stream paused', 'paused');
+    }
+    
+    updatePlayPauseState();
+}
+
+// Generate UI
+function generateRadioIcons() {
+    const fragment = document.createDocumentFragment();
+    
+    radioList.forEach((radio, index) => {
+        const container = document.createElement('div');
+        container.className = 'radio-icon-container';
+        if (index === initialSelectedIndex) {
+            container.classList.add('selected', 'paused');
+        }
+        
+        const img = document.createElement('img');
+        // Handle image path
+        if (!radio.image || radio.image === '') {
+            img.src = 'img/default.png';
+        } else if (radio.image.startsWith('http')) {
+            img.src = radio.image;
+        } else {
+            img.src = 'img/' + radio.image;
+        }
+        img.alt = radio.name;
+        img.title = radio.name;
+        img.className = 'radio-icon';
+        img.loading = 'lazy'; // Optimize image loading
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'icon-overlay';
+        overlay.innerHTML = '<i class="fas fa-play"></i>';
+        overlay.title = 'Play';
+        
+        // Add station title display
+        const stationTitle = document.createElement('div');
+        stationTitle.className = 'station-title';
+        stationTitle.textContent = radio.name;
+        
+        container.appendChild(img);
+        container.appendChild(overlay);
+        container.appendChild(stationTitle);
+        container.onclick = () => togglePlayPause(index);
+        
+        fragment.appendChild(container);
+    });
+    
+    radioListDiv.appendChild(fragment);
+    
+    if (radioList.length > 0) {
+        updateRadioInfo(initialSelectedIndex);
+        updateStatus('Ready to play', 'ready');
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    generateRadioIcons();
+    
+    // Add touch event handlers for mobile
+    addTouchEventHandlers();
+});
+
+// Touch event handlers for mobile
+function addTouchEventHandlers() {
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    // Detect swipe on player
+    document.getElementById('stickyPlayer').addEventListener('touchstart', function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+    }, false);
+    
+    document.getElementById('stickyPlayer').addEventListener('touchend', function(e) {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, false);
+    
+    // Handle swipe left/right to change stations
+    function handleSwipe() {
+        const minSwipeDistance = 50;
+        if (touchEndX < touchStartX - minSwipeDistance) {
+            // Swipe left - next station
+            changeChannel(currentIndex + 1, true);
+        } else if (touchEndX > touchStartX + minSwipeDistance) {
+            // Swipe right - previous station
+            changeChannel(currentIndex - 1, true);
+        }
+    }
+}
+
+// Event listeners
+radioPlayer.addEventListener('play', () => {
+    updateStatus('Connecting...', 'connecting');
+});
+
+radioPlayer.addEventListener('playing', () => {
+    // Reset retry count on successful play
+    retryCount = 0;
+    isRetrying = false;
+    clearTimeout(retryTimeoutId);
+    
+    updateStatus('Playing', 'playing');
+    updatePlayPauseState();
+});
+
+radioPlayer.addEventListener('pause', () => {
+    updatePlayPauseState();
+});
+
+radioPlayer.addEventListener('waiting', () => {
+    updateStatus('Buffering...', 'buffering');
+    const containers = document.querySelectorAll('.radio-icon-container');
+    const currentContainer = containers[currentIndex];
+    currentContainer.classList.add('buffering');
+});
+
+radioPlayer.addEventListener('ended', () => {
+    updateStatus('Stream ended', 'paused');
+    updatePlayPauseState();
+});
+
+radioPlayer.addEventListener('error', () => {
+    if (!isRetrying) {
+        handlePlaybackError();
+    }
+});
+
+// Sticky player control buttons
+playPauseBtn.addEventListener('click', () => {
+    togglePlayPause(currentIndex);
+});
+
+prevBtn.addEventListener('click', () => {
+    changeChannel(currentIndex - 1, true);
+});
+
+nextBtn.addEventListener('click', () => {
+    changeChannel(currentIndex + 1, true);
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    switch (e.key) {
+        case ' ':
+        case 'Enter':
+            e.preventDefault(); // Prevent default browser behavior
+            togglePlayPause(currentIndex);
+            break;
+        case 'ArrowLeft':
+            e.preventDefault();
+            changeChannel(currentIndex - 1, true);
+            break;
+        case 'ArrowRight':
+            e.preventDefault();
+            changeChannel(currentIndex + 1, true);
+            break;
+        default:
+            // Number keys 1-9 for direct station selection
+            const num = parseInt(e.key);
+            if (!isNaN(num) && num >= 1 && num <= 9 && (num-1) < radioList.length) {
+                changeChannel(num - 1, true);
+            } else if (e.key === '0' && 9 < radioList.length) {
+                changeChannel(9, true);
+            }
+    }
+});
+
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"93701f5e0b1e6d3b","version":"2025.4.0-1-g37f21b1","r":1,"token":"e15b99cd804a427f9b0db52f398ab880","serverTiming":{"name":{"cfExtPri":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}}}' crossorigin="anonymous"></script>
+</body>
+</html>
