@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>play</title>
+  <link rel="stylesheet" href="https://cxh.pages.dev/style.css">
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000;
+    }
+    
+    #player {
+      position: absolute;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      color: white;
+    }
+    
+    .loader {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      flex-direction: column;
+    }
+    
+    .modal-content {
+      background-color: #1e1e1e;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      color: white;
+      max-width: 80%;
+    }
+    
+    .close-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    .channel-selector {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 9000;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 5px;
+      border-radius: 5px;
+      color: white;
+    }
+    
+    /* Live Views Counter Styles */
+    .live-counter {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 9000;
+      background: rgba(255, 0, 0, 0.7);
+      padding: 5px 10px;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+    }
+    
+    .live-indicator {
+      width: 10px;
+      height: 10px;
+      background-color: red;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+  </style>
+  <!-- Added the requested script -->
+  <script type='text/javascript' src='//pl26257625.effectiveratecpm.com/c4/b1/b1/c4b1b1de90a35437dcd6eb8ed1a0a8ca.js'></script>
+  <!-- Added the additional requested script -->
+  <script type='text/javascript' src='//pl26257385.effectiveratecpm.com/c5/00/a0/c500a0861187f8237665508aedd6b06a.js'></script>
+</head>
+<body>
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loader"></div>
+    <p>Loading stream data...</p>
+  </div>
+  
+  <div class="modal" id="devToolsModal">
+    <div class="modal-content">
+      <h2>Developer Tools Detected</h2>
+      <p>For security reasons, this stream cannot be viewed while developer tools are open.</p>
+      <button class="close-btn" id="close">Close</button>
+    </div>
+  </div>
+  
+  <div class="modal" id="adBlockModal">
+    <div class="modal-content">
+      <h2>AdBlock Detected</h2>
+      <p>Please disable AdBlock to continue watching the stream.</p>
+      <button class="close-btn" id="closeAdBlock">Close</button>
+    </div>
+  </div>
+  
+  <div class="modal" id="oneDeckmediaModal">
+    <div class="modal-content">
+      <h2>1DM Detected</h2>
+      <p>For copyright protection, this stream cannot be accessed using 1DM or similar download managers.</p>
+      <button class="close-btn" id="closeOneDeckmedia">Close</button>
+    </div>
+  </div>
+  
+  <div class="channel-selector">
+    <select id="channelSelect">
+      <option value="loading">Loading channels...</option>
+    </select>
+  </div>
+  
+  <div class="live-counter" id="liveCounter">
+    <div class="live-indicator"></div>
+    <span id="viewCount">0</span> viewers
+  </div>
+  
+  <div id="player"></div>
+  
+  <script src='https://content.jwplatform.com/libraries/KB5zFt7A.js'></script>
+  <script>
+    // Variables
+    let playerInstance;
+    let channels = [];
+    let currentChannel = null;
+    let viewerCount = 0;
+    let viewCountUpdateInterval;
+    
+    // Default channels list if channels.json fails to load
+    const defaultChannels = [
+      {
+        name: "Sports Channel 1",
+        description: "Live Sports Stream",
+        streamUrl: "https://example.com/stream1.m3u8",
+        logo: "",
+        image: "",
+        telegramLink: "https://t.me/+qdLjzK5bWoViOWQ1",
+        adTag: ""
+      },
+      {
+        name: "Sports Channel 2",
+        description: "Premium Sports Coverage",
+        streamUrl: "https://example.com/stream2.m3u8",
+        logo: "",
+        image: "",
+        telegramLink: "https://t.me/+qdLjzK5bWoViOWQ1",
+        adTag: ""
+      },
+      {
+        name: "Entertainment Channel",
+        description: "Live Entertainment Stream",
+        streamUrl: "https://example.com/stream3.m3u8",
+        logo: "",
+        image: "",
+        telegramLink: "https://t.me/+qdLjzK5bWoViOWQ1",
+        adTag: ""
+      },
+      {
+        name: "News Channel",
+        description: "24/7 News Coverage",
+        streamUrl: "https://example.com/stream4.m3u8",
+        logo: "",
+        image: "",
+        telegramLink: "https://t.me/+qdLjzK5bWoViOWQ1",
+        adTag: ""
+      },
+      {
+        name: "Movies Channel",
+        description: "Latest Movies Stream",
+        streamUrl: "https://example.com/stream5.m3u8",
+        logo: "",
+        image: "",
+        telegramLink: "https://t.me/+qdLjzK5bWoViOWQ1",
+        adTag: ""
+      }
+    ];
+    
+    // Load channels from JSON file
+    async function loadChannels() {
+      try {
+        const response = await fetch('channels.json');
+        if (!response.ok) {
+          throw new Error('Failed to load channels data');
+        }
+        channels = await response.json();
+        
+        // Update channel selector
+        updateChannelSelector(channels);
+        
+        // Initialize player with first channel
+        if (channels.length > 0) {
+          initializePlayer(0);
+        } else {
+          showError('No channels available');
+        }
+      } catch (error) {
+        console.error('Error loading channels:', error);
+        console.log('Using default channels list instead');
+        channels = defaultChannels;
+        updateChannelSelector(channels);
+        
+        // Initialize player with first channel from default list
+        if (channels.length > 0) {
+          initializePlayer(0);
+        } else {
+          showError('No channels available');
+        }
+      }
+    }
+    
+    // Update channel selector with the provided channels
+    function updateChannelSelector(channelsList) {
+      const channelSelect = document.getElementById('channelSelect');
+      channelSelect.innerHTML = '';
+      
+      channelsList.forEach((channel, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = channel.name;
+        channelSelect.appendChild(option);
+      });
+    }
+    
+    // Initialize JW Player
+    function initializePlayer(channelIndex) {
+      const channel = channels[channelIndex];
+      currentChannel = channel;
+      
+      if (playerInstance) {
+        playerInstance.remove();
+      }
+      
+      playerInstance = jwplayer("player").setup({
+        controls: true,
+        displaytitle: true,
+        autoplay: true,    
+        displaydescription: true,
+        abouttext: "Join Telegram: @terao2",
+        aboutlink: channel.telegramLink || "https://t.me/+qdLjzK5bWoViOWQ1",
+        skin: {
+          name: "netflix"
+        },
+        logo: {
+          file: channel.logo || "",
+          link: channel.telegramLink || "https://t.me/+qdLjzK5bWoViOWQ1"
+        },
+        captions: {
+          color: "#FFF",
+          fontSize: 14,
+          backgroundOpacity: 0,
+          edgeStyle: "raised"
+        },
+        playlist: [
+          {
+            title: channel.name,
+            description: channel.description || "Live Stream",
+            image: channel.image || "",
+            sources: [
+              {
+                file: channel.streamUrl,
+                label: "Auto",
+                default: true
+              }
+            ],
+          }
+        ],
+        advertising: {
+          client: "vast",
+          schedule: [
+            {
+              offset: "pre",
+              tag: channel.adTag || ""
+            }
+          ]
+        }
+      });
+      
+      // Add custom controls
+      playerInstance.on("ready", function () {
+        // Hide loading overlay
+        document.getElementById('loadingOverlay').style.display = 'none';
+        
+        const playerContainer = playerInstance.getContainer();
+        const buttonContainer = playerContainer.querySelector(".jw-button-container");
+        
+        // Rewind button functionality
+        const rewindContainer = playerContainer.querySelector(".jw-display-icon-rewind");
+        const rewindButton = rewindContainer.cloneNode(true);
+        const rewindIcon = rewindButton.querySelector(".jw-icon-rewind");
+        rewindIcon.style.transform = "scaleX(1)";
+        rewindIcon.ariaLabel = "Rewind 10 Seconds";
+        
+        const nextContainer = playerContainer.querySelector(".jw-display-icon-next");
+        if (nextContainer) {
+          nextContainer.parentNode.insertBefore(rewindButton, nextContainer);
+        }
+        
+        // Rewind functionality for the control bar
+        const rewindControlBarButton = buttonContainer.querySelector(".jw-icon-rewind");
+        if (rewindControlBarButton) {
+          const rewindControlBarClone = rewindControlBarButton.cloneNode(true);
+          rewindControlBarClone.style.transform = "scaleX(1)";
+          rewindControlBarClone.ariaLabel = "Rewind 10 Seconds";
+          buttonContainer.insertBefore(rewindControlBarClone, buttonContainer.firstChild);
+          
+          // On click of rewind button, seek backward by 10 seconds
+          [rewindButton, rewindControlBarClone].forEach((button) => {
+            button.onclick = () => {
+              const currentPosition = playerInstance.getPosition();
+              const newPosition = Math.max(currentPosition - 10, 0); // Prevent going below 0
+              playerInstance.seek(newPosition);
+            };
+          });
+        }
+        
+        // Detect adblock
+        playerInstance.on("adBlock", () => {
+          document.getElementById("adBlockModal").style.display = "flex";
+        });
+        
+        // Initialize viewers count
+        initializeViewersCount();
+      });
+      
+      // Error handling
+      playerInstance.on("error", function(e) {
+        console.error("Player error:", e);
+        showError("Stream error. Please try again later.");
+      });
+    }
+    
+    // Initialize and update viewers count
+    function initializeViewersCount() {
+      // Clear any existing interval
+      if (viewCountUpdateInterval) {
+        clearInterval(viewCountUpdateInterval);
+      }
+      
+      // Generate initial viewer count (between 500-2000)
+      viewerCount = Math.floor(Math.random() * 1500) + 500;
+      updateViewerCountDisplay();
+      
+      // Update viewers count periodically
+      viewCountUpdateInterval = setInterval(() => {
+        // Random fluctuation in viewer count (-10 to +20)
+        const change = Math.floor(Math.random() * 31) - 10;
+        viewerCount = Math.max(100, viewerCount + change); // Ensure count doesn't go below 100
+        updateViewerCountDisplay();
+      }, 5000); // Update every 5 seconds
+    }
+    
+    // Update the viewer count display
+    function updateViewerCountDisplay() {
+      document.getElementById('viewCount').textContent = viewerCount.toLocaleString();
+    }
+    
+    // Show error message
+    function showError(message) {
+      document.getElementById('loadingOverlay').style.display = 'none';
+      
+      const errorModal = document.createElement('div');
+      errorModal.className = 'modal';
+      errorModal.style.display = 'flex';
+      
+      errorModal.innerHTML = `
+        <div class="modal-content">
+          <h2>Error</h2>
+          <p>${message}</p>
+          <button class="close-btn" onclick="location.reload()">Reload</button>
+        </div>
+      `;
+      
+      document.body.appendChild(errorModal);
+    }
+    
+    // 1DM Detection function - improved version without downloading test files
+    function detect1DMandDownloadManagers() {
+      // Check for common 1DM and download manager signatures
+      const userAgent = navigator.userAgent.toLowerCase();
+      const downloadManagerSignatures = [
+        '1dm', 'onedm', '1 dm', 'idm', 'internet download manager', 
+        'download manager', 'downloader', 'adm', 'advanced download manager',
+        'download master', 'eagleget', 'fdm', 'free download manager',
+        'getright', 'dap', 'downloadapp'
+      ];
+      
+      // Check if any download manager signatures are in user agent
+      if (downloadManagerSignatures.some(dm => userAgent.includes(dm))) {
+        document.getElementById('oneDeckmediaModal').style.display = "flex";
+        if (playerInstance) {
+          playerInstance.pause();
+        }
+        return true;
+      }
+      
+      // Check for specific browser features commonly used by download managers
+      if (typeof navigator.mimeTypes !== 'undefined' && navigator.mimeTypes.length > 0) {
+        // Some download managers modify mime types or add specific ones
+        for (let i = 0; i < navigator.mimeTypes.length; i++) {
+          const mimeType = navigator.mimeTypes[i].type.toLowerCase();
+          if (mimeType.includes('downloader') || mimeType.includes('download-manager')) {
+            document.getElementById('oneDeckmediaModal').style.display = "flex";
+            if (playerInstance) {
+              playerInstance.pause();
+            }
+            return true;
+          }
+        }
+      }
+      
+      // Check if navigator has unusual properties (some download managers add these)
+      if (navigator.hasOwnProperty('downloader') || 
+          navigator.hasOwnProperty('idm') || 
+          navigator.hasOwnProperty('oneDeckmedia')) {
+        document.getElementById('oneDeckmediaModal').style.display = "flex";
+        if (playerInstance) {
+          playerInstance.pause();
+        }
+        return true;
+      }
+      
+      return false;
+    }
+    
+    // Network security monitoring function
+    function setupNetworkSecurityMonitoring() {
+      // Variables to track network activity
+      let requestTimes = [];
+      let lastRequestTime = Date.now();
+      let suspiciousActivityCount = 0;
+      
+      // Track XMLHttpRequest
+      const originalXHROpen = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function() {
+        const currentTime = Date.now();
+        requestTimes.push(currentTime - lastRequestTime);
+        lastRequestTime = currentTime;
+        
+        // Keep only recent requests for analysis
+        if (requestTimes.length > 20) {
+          requestTimes.shift();
+        }
+        
+        // Check for suspicious patterns
+        checkForAnomalies();
+        
+        return originalXHROpen.apply(this, arguments);
+      };
+      
+      // Track fetch requests
+      const originalFetch = window.fetch;
+      window.fetch = function() {
+        const currentTime = Date.now();
+        requestTimes.push(currentTime - lastRequestTime);
+        lastRequestTime = currentTime;
+        
+        if (requestTimes.length > 20) {
+          requestTimes.shift();
+        }
+        
+        checkForAnomalies();
+        
+        return originalFetch.apply(this, arguments);
+      };
+      
+      // WebSocket monitoring
+      const originalWebSocket = window.WebSocket;
+      window.WebSocket = function(url, protocols) {
+        const ws = new originalWebSocket(url, protocols);
+        
+        ws.addEventListener('open', function() {
+          checkWebSocketSecurity(url);
+        });
+        
+        ws.addEventListener('message', function(event) {
+          analyzeWebSocketTraffic(event.data);
+        });
+        
+        return ws;
+      };
+      
+      // Function to analyze WebSocket traffic
+      function analyzeWebSocketTraffic(data) {
+        try {
+          // Basic size analysis
+          if (typeof data === 'string' && data.length > 10000) {
+            suspiciousActivityCount++;
+          }
+          
+          // Check for potential binary data dumps
+          if (data instanceof ArrayBuffer && data.byteLength > 5000) {
+            suspiciousActivityCount++;
+          }
+          
+          // Report if suspicious count exceeds threshold
+          if (suspiciousActivityCount > 5) {
+            reportSecurityIssue('Unusual WebSocket traffic detected');
+          }
+        } catch (e) {
+          console.error('Error analyzing WebSocket traffic:', e);
+        }
+      }
+      
+      // Check WebSocket connection security
+      function checkWebSocketSecurity(url) {
+        try {
+          const wsUrl = new URL(url);
+          
+          // Check if WebSocket is secure
+          if (wsUrl.protocol !== 'wss:') {
+            reportSecurityIssue('Insecure WebSocket connection detected');
+          }
+          
+          // Check if connecting to unexpected domains
+          if (!isAllowedDomain(wsUrl.hostname)) {
+            reportSecurityIssue('Connection to unauthorized WebSocket server');
+          }
+        } catch (e) {
+          console.error('Error checking WebSocket security:', e);
+        }
+      }
+      
+      // List of allowed domains for connections
+      function isAllowedDomain(domain) {
+        const allowedDomains = [
+          'content.jwplatform.com',
+          't.me',
+          'cxh.pages.dev',
+          'cdn.jsdelivr.net',
+          'effectiveratecpm.com'
+          // Add other domains that are expected in your application
+        ];
+        
+        return allowedDomains.some(allowed => domain.includes(allowed));
+      }
+      
+      // Check for patterns that might indicate packet capture tools
+      function checkForAnomalies() {
+        // Check for too many requests in short timeframe
+        if (requestTimes.length > 10) {
+          const average = requestTimes.reduce((a, b) => a + b, 0) / requestTimes.length;
+          
+          if (average < 50) { // Too many rapid requests
+            suspiciousActivityCount++;
+          }
+          
+          // Check for extremely consistent timing (might indicate automated tool)
+          const stdDev = calculateStandardDeviation(requestTimes);
+          if (stdDev < 5 && average < 200) {
+            suspiciousActivityCount++;
+          }
+        }
+        
+        // Reset counter periodically to avoid false positives
+        setTimeout(() => {
+          suspiciousActivityCount = Math.max(0, suspiciousActivityCount - 1);
+        }, 10000);
+        
+        // Report if suspicious count exceeds threshold
+        if (suspiciousActivityCount > 3) {
+          reportSecurityIssue('Potential packet capture activity detected');
+        }
+      }
+      
+      // Utility function to calculate standard deviation
+      function calculateStandardDeviation(array) {
+        const mean = array.reduce((a, b) => a + b, 0) / array.length;
+        const variance = array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / array.length;
+        return Math.sqrt(variance);
+      }
+      
+      // Function to handle security issues
+      function reportSecurityIssue(message) {
+        console.warn('Security alert:', message);
+        
+        // Show security warning modal
+        const securityModal = document.createElement('div');
+        securityModal.className = 'modal';
+        securityModal.style.display = 'flex';
+        securityModal.style.zIndex = '20000';
+        
+        securityModal.innerHTML = `
+          <div class="modal-content">
+            <h2>Security Alert</h2>
+            <p>Unusual network activity detected. This could indicate unauthorized monitoring of the stream.</p>
+            <p>For your security, the stream will be paused.</p>
+            <button class="close-btn" id="securityCloseBtn">I Understand</button>
+          </div>
+        `;
+        
+        document.body.appendChild(securityModal);
+        
+        // Pause player if active
+        if (playerInstance && typeof playerInstance.pause === 'function') {
+          playerInstance.pause();
+        }
+        
+        // Add event listener to close button
+        document.getElementById('securityCloseBtn').addEventListener('click', function() {
+          securityModal.style.display = 'none';
+          
+          // Reset counter but keep monitoring
+          suspiciousActivityCount = 0;
+        });
+      }
+      
+      // Check for Wireshark and other packet capture tools
+      function detectNetworkTools() {
+        const userAgent = navigator.userAgent.toLowerCase();
+        const knownToolSignatures = [
+          'wireshark',
+          'fiddler',
+          'charles',
+          'burp',
+          'packetcapture',
+          'networkmonitor'
+        ];
+        
+        // Check if any tool signatures are in user agent (rare but possible)
+        if (knownToolSignatures.some(tool => userAgent.includes(tool))) {
+          reportSecurityIssue('Network monitoring tool detected');
+        }
+        
+        // Check performance characteristics that might indicate VM/tools running
+        const startTime = performance.now();
+        let counter = 0;
+        for (let i = 0; i < 1000000; i++) {
+          counter++;
+        }
+        const endTime = performance.now();
+        const executionTime = endTime - startTime;
+        
+        // Unusually slow execution might indicate debugging/monitoring tools
+        if (executionTime > 500) {
+          suspiciousActivityCount++;
+          if (suspiciousActivityCount > 3) {
+            reportSecurityIssue('System performance indicates possible monitoring tools');
+          }
+        }
+      }
+      
+      // Add window focus detection
+      let windowBlurTime = 0;
+      window.addEventListener('blur', () => {
+        windowBlurTime = Date.now();
+      });
+      
+      window.addEventListener('focus', () => {
+        // If window was blurred for suspiciously short time (tab switching to tools)
+        const blurDuration = Date.now() - windowBlurTime;
+        if (blurDuration > 100 && blurDuration < 1000) {
+          suspiciousActivityCount++;
+          if (suspiciousActivityCount > 3) {
+            reportSecurityIssue('Suspicious window switching pattern detected');
+          }
+        }
+      });
+      
+      // Run network tool detection periodically
+      setInterval(detectNetworkTools, 10000);
+      
+      // Run initial check
+      detectNetworkTools();
+      
+      // Return public methods if needed
+      return {
+        reset: function() {
+          suspiciousActivityCount = 0;
+          requestTimes = [];
+        }
+      };
+    }
+    
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load channels
+      loadChannels();
+      
+      // Initialize network security monitoring
+      const networkSecurity = setupNetworkSecurityMonitoring();
+      
+      // Add to window object for potential manual reset
+      window.resetNetworkSecurity = function() {
+        networkSecurity.reset();
+      };
+      
+      // Check for 1DM and download managers
+      detect1DMandDownloadManagers();
+      
+      // Channel selector change event
+      document.getElementById('channelSelect').addEventListener('change', function(e) {
+        const channelIndex = parseInt(e.target.value);
+        initializePlayer(channelIndex);
+      });
+      
+      // AdBlock modal close button
+      document.getElementById('closeAdBlock').addEventListener('click', function() {
+        document.getElementById('adBlockModal').style.display = 'none';
+      });
+      
+      // DevTools modal close button
+      document.getElementById('close').addEventListener('click', function() {
+        document.getElementById('devToolsModal').style.display = 'none';
+      });
+      
+      // 1DM modal close button
+      document.getElementById('closeOneDeckmedia').addEventListener('click', function() {
+        document.getElementById('oneDeckmediaModal').style.display = 'none';
+      });
+    });
+    
+    // Detect developer tools
+    function detectDevTools() {
+      const devToolsOpen = window.outerWidth - window.innerWidth > 160 || 
+                          window.outerHeight - window.innerHeight > 160;
+      
+      if (devToolsOpen) {
+        document.getElementById('devToolsModal').style.display = 'flex';
+        if (playerInstance) {
+          playerInstance.pause();
+        }
+      } else {
+        document.getElementById('devToolsModal').style.display = 'none';
+        if (playerInstance && playerInstance.getState() === 'paused') {
+          playerInstance.play();
+        }
+      }
+    }
+    
+    // Periodically check for download managers
+    setInterval(detect1DMandDownloadManagers, 10000);
+    
+    // Check for developer tools periodically
+    setInterval(detectDevTools, 1000);
+    
+    // Prevent right-click
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      return false;
+    });
+    
+    // Block various keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      // Prevent F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+      if (
+        e.keyCode === 123 || 
+        (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) ||
+        (e.ctrlKey && e.keyCode === 85)
+      ) {
+        e.preventDefault();
+        return false;
+      }
+    });
+    
+    // Additional protection against stream downloading
+    function setupDownloadProtection() {
+      // Define URLs that should be protected
+      const protectUrls = ['m3u8', 'mpd', 'mp4', 'ts', 'key', 'manifest'];
+      
+      // Intercept fetch requests
+      const originalFetch = window.fetch;
+      window.fetch = function(url, options) {
+        if (typeof url === 'string' && protectUrls.some(ext => url.includes('.' + ext))) {
+          // Add random query parameter to break caching
+          const separator = url.includes('?') ? '&' : '?';
+          const protectedUrl = url + separator + 'token=' + Math.random().toString(36).substring(2, 15);
+          
+          // Add special headers that 1DM won't handle correctly
+          const newOptions = options || {};
+          newOptions.headers = newOptions.headers || {};
+          newOptions.headers['X-Stream-Protection'] = 'enabled';
+          newOptions.headers['Cache-Control'] = 'no-store, max-age=0';
+          
+          return originalFetch.call(this, protectedUrl, newOptions);
+        }
+        return originalFetch.apply(this, arguments);
+      };
+      
+      // Override XMLHttpRequest to add protections
+      const originalXhrOpen = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
+        if (typeof url === 'string' && protectUrls.some(ext => url.includes('.' + ext))) {
+          // Add random query parameter to break caching
+          const separator = url.includes('?') ? '&' : '?';
+          const protectedUrl = url + separator + 'token=' + Math.random().toString(36).substring(2, 15);
+          
+          // Override the default withCredentials behavior
+          this.withCredentials = true;
+          
+          // Set request headers that can interfere with download managers
+          this.addEventListener('readystatechange', function() {
+            if (this.readyState === 1) { // OPENED
+              this.setRequestHeader('X-Stream-Protection', 'enabled');
+              this.setRequestHeader('Cache-Control', 'no-store, max-age=0');
+            }
+          });
+          
+          return originalXhrOpen.call(this, method, protectedUrl, async, user, password);
+        }
+        return originalXhrOpen.apply(this, arguments);
+      };
+    }
+    
+    // Initialize download protection
+    setupDownloadProtection();
+    
+    // Confirmation message for joining Telegram channel
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        var joinConfirm = confirm("Join For More Links!!");
+        if (joinConfirm) {
+          window.open("https://t.me/terao2", "_blank");
+        }
+      }, 3000);
+    });
+  </script>
+  
+  <!-- Additional protection against developer tools -->
+  <script disable-devtool-auto='true' src='https://cdn.jsdelivr.net/npm/disable-devtool' clear-log='true' disable-select='true' disable-copy='true' disable-cut='true' disable-paste='true'></script>
+</body>
+</html>
