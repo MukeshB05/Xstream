@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>A modern go-everywhere HTML5 video player - Radiant Media Player</title>
+</head>
+
+<body>
+
+  <script src="https://cdn.radiantmediatechs.com/rmp/10.7.5/js/rmp-shaka.min.js"></script>
+  <script>
+    const src2 = {
+      mp4: [
+        'https://cdn.radiantmediatechs.com/rmp/media/intro-rmp/snap/v3/360p-avc.mp4'
+      ],
+      dash: 'https://cdn.radiantmediatechs.com/rmp/media/intro-rmp/snap/v3/manifest.mpd',
+    };
+    const settings = {
+      width: 960,
+      height: 540,
+      licenseKey: 'Kl8lbz16cz1rN2l2enM9Z2M9NnZvMnllaT9yb201ZGFzaXMzMGRiMEElXyo=',
+      src: src2,
+      enableGAVideoTracking: true,
+      gaEventParameters: {
+        'video_title': 'RMP Homepage video (Powtoon)'
+      },
+      sharing: true,
+      quickRewind: 10,
+      //seekBarThumbnailsLoc: 'https://www.radiantmediaplayer.com/media/vtt/thumbnails/top-17-thumbnails.vtt',
+      sharingNetworks: ['facebook', 'x', 'linkedin', 'email'],
+      sharingCode: '<iframe width="544" height="306" src="https://www.radiantmediaplayer.com/docs/latest/gist/iframe/index.html" title="Radiant Media Player presentation video" style="border:none;" allowfullscreen sandbox="allow-scripts allow-presentation allow-same-origin" allow="autoplay; fullscreen; picture-in-picture; xr-spatial-tracking; encrypted-media; clipboard-write"></iframe>',
+      skin: 's1',
+      contentMetadata: {
+        title: 'Welcome to Radiant Media Player!',
+        artwork: [{
+            src: 'https://www.radiantmediaplayer.com/images/rmp-icon-96.png',
+            sizes: '96x96',
+            type: 'image/png'
+          },
+          {
+            src: 'https://www.radiantmediaplayer.com/images/rmp-icon-192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'https://www.radiantmediaplayer.com/images/rmp-icon-384.png',
+            sizes: '384x384',
+            type: 'image/png'
+          },
+          {
+            src: 'https://www.radiantmediaplayer.com/images/rmp-icon-512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ],
+        poster: [
+          'https://cdn.radiantmediatechs.com/rmp/media/intro-rmp/snap/v3/rmp-poster.jpg'
+        ],
+        animatedPoster: 'https://cdn.radiantmediatechs.com/rmp/media/intro-rmp/snap/v3/rmp-animated-poster.webp'
+      }
+    };
+    const rmp = new RadiantMP('rmp');
+    async function initRmpPlayer() {
+      try {
+        await rmp.init(settings);
+      } catch (error) {
+        console.error('Radiant Media Player failed to initialize', error);
+      }
+    }
+    initRmpPlayer();
+  </script>
+</body>
+
+</html>
